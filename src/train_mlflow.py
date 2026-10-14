@@ -24,7 +24,7 @@ from sklearn.metrics import (
 import pickle
 from datetime import datetime
 
-mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_tracking_uri("http://localhost:5555")
 mlflow.set_experiment("fraud-detection")
 
 def load_and_preprocess_data():
@@ -116,7 +116,8 @@ def train_and_log_model(
             sk_model=model,
             artifact_path="model",
             registered_model_name="fraud-detection-model",
-            input_example=X_train.iloc[:5]
+            input_example=X_train.iloc[:5],
+            skops_trusted_types=["sklearn.tree._tree.Tree"] # Safer to remove this first, but added for demonstration
         )
         
         with open("encoder.pkl", "wb") as f:
@@ -125,7 +126,7 @@ def train_and_log_model(
         
         run_id = mlflow.active_run().info.run_id
         print(f"\nMLflow Run ID: {run_id}")
-        print(f"View this run: http://localhost:5000/#/experiments/1/runs/{run_id}")
+        print(f"View this run: http://localhost:5555/#/experiments/1/runs/{run_id}")
         
         return model, encoder
 
@@ -149,7 +150,7 @@ def run_experiment_sweep():
     print("\n" + "="*60)
     print("EXPERIMENT SWEEP COMPLETE!")
     print("="*60)
-    print("\nView all experiments at: http://localhost:5000")
+    print("\nView all experiments at: http://localhost:5555")
     print("Compare runs to find the best hyperparameters!")
 
 if __name__ == "__main__":

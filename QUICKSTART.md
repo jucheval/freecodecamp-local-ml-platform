@@ -2,30 +2,43 @@
 
 Get the ML platform running in 10 minutes!
 
-## Prerequisites Check
+> Julien: I changed what is below to use `uv` during my installation at home. Let's see if it works at work...
+> I removed Steps 3, 4 (API server) and 6 (data drift monitoring). May be good to include step 6 in later versions.
 
-```bash
-# Check Python version (need 3.9+)
-python --version
+- [Prerequisites](#prerequisites)
+- [Step 1: Setup (2 minutes)](#step-1-setup-2-minutes)
+- [Step 2: Generate Data and Train Model (2 minutes)](#step-2-generate-data-and-train-model-2-minutes)
+- [Step 5: Run MLflow Experiments (Optional, 3 minutes)](#step-5-run-mlflow-experiments-optional-3-minutes)
+- [Common Commands](#common-commands)
+- [What's Next?](#whats-next)
+- [Troubleshooting](#troubleshooting)
+- [Success Criteria](#success-criteria)
 
-# Check Docker
-docker --version
+## Prerequisites
 
-# Check available disk space (need 5GB+)
-df -h .
-```
+Install `uv`:
+
+- Standalone installer (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+- WinGet: `powershell winget install --id=astral-sh.uv -e`
+- Scoop: `powershell scoop install main/uv`
 
 ## Step 1: Setup (2 minutes)
 
-```bash
-cd freecodecamp-local-ml-platform
+Open terminal in this repo's root directory and run:
 
+```bash
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+uv venv --python 3.12
 
 # Install dependencies
-pip install -r requirements.txt
+uv pip install -r requirements.txt --python 3.12
+```
+
+If it fails, lower the python version:
+
+```bash
+uv venv --python 3.10 --allow-existing
+uv pip install -r requirements.txt
 ```
 
 ## Step 2: Generate Data and Train Model (2 minutes)
@@ -35,26 +48,27 @@ pip install -r requirements.txt
 mkdir -p data models
 
 # Generate synthetic fraud detection data
-python src/generate_data.py
+uv run python src/generate_data.py
 
 # Train baseline model
-python src/train_naive.py
+uv run python src/train_naive.py
 ```
 
 **Expected output:**
+
 - `data/train.csv` (8,000 transactions)
 - `data/test.csv` (2,000 transactions)
 - `models/model.pkl` (trained model)
 - Accuracy: ~98%, F1-score: ~0.5-0.7
 
-## Step 3: Start the API (1 minute)
+<!-- ## Step 3: Start the API (1 minute)
 
 ```bash
 # Start the validated API with data validation
-uvicorn src.serve_validated:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn src.serve_validated:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Verify:** Open http://localhost:8000/docs in your browser
+**Verify:** Open <http://localhost:8000/docs> in your browser
 
 ## Step 4: Test the API (1 minute)
 
@@ -73,35 +87,41 @@ curl -X POST "http://localhost:8000/predict" \
   -d '{"amount": -100, "hour": 25, "day_of_week": 10, "merchant_category": "fake"}'
 
 # Expected: HTTP 400 with detailed error messages
-```
+``` -->
 
 ## Step 5: Run MLflow Experiments (Optional, 3 minutes)
 
+In a first terminal, run:
+
 ```bash
-# Terminal 1: Start MLflow server
-mlflow server --host 0.0.0.0 --port 5000 \
+# Start MLflow server
+uv run mlflow server --host 0.0.0.0 --port 5555 \
     --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root ./mlruns
-
-# Terminal 2: Run experiment sweep
-python src/train_mlflow.py
-
-# Open http://localhost:5000 to view experiments
 ```
 
-## Step 6: Run Drift Monitoring (Optional, 1 minute)
+In a second terminal, run:
 
 ```bash
-python src/monitoring.py
+# Run experiment sweep
+uv run python src/train_mlflow.py
+```
+
+Open <http://localhost:5555> to view experiments
+
+<!-- ## Step 6: Run Drift Monitoring (Optional, 1 minute)
+
+```bash
+uv run python src/monitoring.py
 
 # Open drift_report.html in your browser
-```
+``` -->
 
 ## Common Commands
 
 ```bash
 # Run all tests
-pytest tests/ -v
+uv run pytest tests/ -v
 
 # Build Docker image
 docker build -t fraud-detection-api .
@@ -127,6 +147,7 @@ open http://localhost:8000/docs
 ## Troubleshooting
 
 **API won't start:**
+
 ```bash
 # Check if port 8000 is already in use
 lsof -i :8000
@@ -135,12 +156,14 @@ kill -9 <PID>
 ```
 
 **Model not found:**
+
 ```bash
 # Retrain the model
 python src/train_naive.py
 ```
 
 **Import errors:**
+
 ```bash
 # Make sure you're in the project root
 pwd  # Should end with ml-platform-tutorial
@@ -149,6 +172,7 @@ pip install -r requirements.txt
 ```
 
 **MLflow connection error:**
+
 ```bash
 # Make sure MLflow server is running on port 5000
 curl http://localhost:5000/health
