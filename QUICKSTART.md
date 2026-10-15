@@ -2,7 +2,6 @@
 
 Get the ML platform running in 10 minutes!
 
-> Julien: I changed what is below to use `uv` during my installation at home. Let's see if it works at work...
 > I removed Steps 3, 4 (API server) and 6 (data drift monitoring). May be good to include step 6 in later versions.
 
 - [Prerequisites](#prerequisites)
@@ -16,11 +15,11 @@ Get the ML platform running in 10 minutes!
 
 ## Prerequisites
 
-Install `uv`:
+- Install [`uv` (Python package and project manager)](https://docs.astral.sh/uv/getting-started/installation/#installation-methods).
+- Run `uv --version` to verify the installation.
+- Run `python -V` to check the version of Python installed on your machine.
 
-- Standalone installer (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
-- WinGet: `powershell winget install --id=astral-sh.uv -e`
-- Scoop: `powershell scoop install main/uv`
+The rest of this guide assumes it is Python 3.12. If not, you should modify some commands below.
 
 ## Step 1: Setup (2 minutes)
 
@@ -31,14 +30,14 @@ Open terminal in this repo's root directory and run:
 uv venv --python 3.12
 
 # Install dependencies
-uv pip install -r requirements.txt --python 3.12
+uv pip install -r requirements.txt --system-certs
 ```
 
 If it fails, lower the python version:
 
 ```bash
 uv venv --python 3.10 --allow-existing
-uv pip install -r requirements.txt
+uv pip install -r requirements.txt --system-certs
 ```
 
 ## Step 2: Generate Data and Train Model (2 minutes)
@@ -157,16 +156,16 @@ kill -9 <PID>
 
 ```bash
 # Retrain the model
-python src/train_naive.py
+uv run python src/train_naive.py
 ```
 
 **Import errors:**
 
 ```bash
 # Make sure you're in the project root
-pwd  # Should end with ml-platform-tutorial
+pwd  # Should end with freecodecamp-local-ml-platform
 # Reinstall dependencies
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 **MLflow connection error:**
