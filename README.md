@@ -4,23 +4,48 @@ A complete, production-ready ML platform built locally with experiment tracking,
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Chapter-by-Chapter Guide](#chapter-by-chapter-guide)
-- [Running the Complete Pipeline](#running-the-complete-pipeline)
-- [Testing](#testing)
-- [Docker Deployment](#docker-deployment)
-- [Troubleshooting](#troubleshooting)
+- [📋 Table of Contents](#-table-of-contents)
+- [🎯 Overview](#-overview)
+- [🏗️ Architecture](#️-architecture)
+- [📦 Prerequisites](#-prerequisites)
+- [🚀 Quick Start](#-quick-start)
+  - [1. Clone and Setup](#1-clone-and-setup)
+  - [2. Generate Data and Train Model](#2-generate-data-and-train-model)
+  - [3. Start the API](#3-start-the-api)
+  - [4. Test the API](#4-test-the-api)
+- [📁 Project Structure](#-project-structure)
+- [📚 Chapter-by-Chapter Guide](#-chapter-by-chapter-guide)
+  - [Chapter 1: Build a Simple Model and API (Naive Approach)](#chapter-1-build-a-simple-model-and-api-naive-approach)
+  - [Chapter 2: Where the Naive Approach Breaks](#chapter-2-where-the-naive-approach-breaks)
+  - [Chapter 3: Add Experiment Tracking with MLflow](#chapter-3-add-experiment-tracking-with-mlflow)
+  - [Chapter 4: Ensure Feature Consistency with Feast](#chapter-4-ensure-feature-consistency-with-feast)
+  - [Chapter 5: Add Data Validation with Great Expectations](#chapter-5-add-data-validation-with-great-expectations)
+  - [Chapter 6: Monitor Model Performance and Data Drift](#chapter-6-monitor-model-performance-and-data-drift)
+  - [Chapter 7: Automate Testing and Deployment with CI/CD](#chapter-7-automate-testing-and-deployment-with-cicd)
+- [🔄 Running the Complete Pipeline](#-running-the-complete-pipeline)
+  - [Full End-to-End Workflow](#full-end-to-end-workflow)
+- [🧪 Testing](#-testing)
+  - [Run All Tests](#run-all-tests)
+  - [Manual Testing](#manual-testing)
+- [🐳 Docker Deployment](#-docker-deployment)
+  - [Build and Run](#build-and-run)
+  - [Docker Compose (Optional)](#docker-compose-optional)
+- [🔧 Troubleshooting](#-troubleshooting)
+  - [Common Issues](#common-issues)
+  - [Performance Tips](#performance-tips)
+- [📊 Key Metrics](#-key-metrics)
+- [🎓 Learning Outcomes](#-learning-outcomes)
+- [🚀 Next Steps: Scaling to Production](#-next-steps-scaling-to-production)
+- [📚 Additional Resources](#-additional-resources)
+- [📝 License](#-license)
+- [🤝 Contributing](#-contributing)
 
 ## 🎯 Overview
 
 This project implements a **fraud detection ML system** with production-grade infrastructure:
 
 | Component | Tool | Purpose |
-|-----------|------|---------|
+| ----------- | ------ | --------- |
 | **Experiment Tracking** | MLflow | Track experiments, compare runs, reproduce results |
 | **Model Registry** | MLflow | Version models, manage deployment stages |
 | **Feature Store** | Feast | Consistent features between training and serving |
@@ -178,6 +203,7 @@ python src/test_bad_data.py
 ### Chapter 2: Where the Naive Approach Breaks
 
 **Problems identified:**
+
 - ❌ No experiment tracking (can't reproduce results)
 - ❌ No model versioning (can't roll back)
 - ❌ No data validation (garbage in, garbage out)
@@ -193,17 +219,18 @@ python src/test_bad_data.py
 mkdir -p mlruns
 mlflow server \
     --host 0.0.0.0 \
-    --port 5000 \
+    --port 5001 \
     --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root ./mlruns
 
 # Terminal 2: Run experiment sweep
 python src/train_mlflow.py
 
-# View experiments at http://localhost:5000
+# View experiments at http://localhost:5001
 ```
 
 **In MLflow UI:**
+
 1. Compare runs side-by-side
 2. Find the best model (highest test_f1)
 3. Promote it to "Production" stage
@@ -231,6 +258,7 @@ python src/feast_features.py
 ```
 
 **What you get:**
+
 - ✅ Same feature definitions for training and serving
 - ✅ Point-in-time correct joins (no data leakage)
 - ✅ Low-latency online serving
@@ -253,6 +281,7 @@ curl -X POST "http://localhost:8000/predict" \
 ```
 
 **Response:**
+
 ```json
 {
   "detail": {
@@ -279,6 +308,7 @@ python src/monitoring.py
 ```
 
 **Scenarios tested:**
+
 - ✅ Similar data (test set) → No drift
 - ⚠️ Fraud spike (10% fraud) → Drift detected
 - ⚠️ Amount inflation (2x) → Drift detected
@@ -320,7 +350,7 @@ python src/generate_data.py
 python src/prepare_feast_features.py
 
 # 4. Start MLflow server (Terminal 1)
-mlflow server --host 0.0.0.0 --port 5000 \
+mlflow server --host 0.0.0.0 --port 5001 \
     --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root ./mlruns
 
@@ -328,7 +358,7 @@ mlflow server --host 0.0.0.0 --port 5000 \
 python src/train_mlflow.py
 
 # 6. Promote best model to Production in MLflow UI
-# Visit http://localhost:5000, go to Models tab, select best version, set stage to "Production"
+# Visit http://localhost:5001, go to Models tab, select best version, set stage to "Production"
 
 # 7. Start validated API (Terminal 2)
 uvicorn src.serve_validated:app --reload --port 8000
@@ -409,11 +439,11 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
     ports:
-      - "5000:5000"
+      - "5001:5001"
     command: >
       mlflow server
       --host 0.0.0.0
-      --port 5000
+      --port 5001
       --backend-store-uri sqlite:///mlflow/mlflow.db
       --default-artifact-root /mlflow/artifacts
     volumes:
@@ -426,7 +456,7 @@ services:
     depends_on:
       - mlflow
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
 
 volumes:
   mlflow_data:
@@ -439,33 +469,43 @@ Run with: `docker-compose up`
 ### Common Issues
 
 **Issue: MLflow model not found**
+
 ```
 Error: No model found with name 'fraud-detection-model' in stage 'Production'
 ```
-**Solution:** Promote a model to Production stage in MLflow UI (http://localhost:5000)
+
+**Solution:** Promote a model to Production stage in MLflow UI (<http://localhost:5001>)
 
 **Issue: Feast features not found**
+
 ```
 Error: Feature view 'merchant_stats' not found
 ```
+
 **Solution:** Run `python src/prepare_feast_features.py` to materialize features
 
 **Issue: API tests fail with connection error**
+
 ```
 httpx.ConnectError: [Errno 61] Connection refused
 ```
+
 **Solution:** Make sure the API is running on port 8000 before running tests
 
 **Issue: Docker build fails**
+
 ```
 ERROR: failed to solve: failed to compute cache key
 ```
+
 **Solution:** Ensure `models/model.pkl` exists by running `python src/train_naive.py` first
 
 **Issue: Import errors in tests**
+
 ```
 ModuleNotFoundError: No module named 'src'
 ```
+
 **Solution:** Run tests from project root directory, not from `tests/` directory
 
 ### Performance Tips
@@ -480,7 +520,7 @@ ModuleNotFoundError: No module named 'src'
 After running the complete pipeline, you should see:
 
 | Metric | Expected Value | Notes |
-|--------|---------------|-------|
+| -------- | --------------- | ------- |
 | **Accuracy** | ~98% | High due to class imbalance |
 | **F1-Score** | 0.5-0.7 | More meaningful for imbalanced data |
 | **Precision** | 0.6-0.8 | Legitimate transactions flagged as fraud |

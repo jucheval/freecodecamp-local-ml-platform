@@ -6,6 +6,7 @@ This version loads the Production model from MLflow, which means:
 - Can roll back by changing the Production stage
 - No manual file copying needed
 """
+
 import mlflow
 import mlflow.sklearn
 import pickle
@@ -13,7 +14,7 @@ import os
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_tracking_uri("http://localhost:5001")
 
 print("Loading model from MLflow Model Registry...")
 
@@ -52,43 +53,54 @@ app = FastAPI(
     
     To roll back: Move the 'champion' alias to a previous version in MLflow UI.
     """,
-    version="2.0.0"
+    version="2.0.0",
 )
 
+
 class Transaction(BaseModel):
-    amount: float = Field(..., description="Transaction amount in dollars", example=150.00)
+    amount: float = Field(
+        ..., description="Transaction amount in dollars", example=150.00
+    )
     hour: int = Field(..., description="Hour of the day (0-23)", example=14)
-    day_of_week: int = Field(..., description="Day of week (0=Monday, 6=Sunday)", example=3)
-    merchant_category: str = Field(..., description="Type of merchant", example="online")
+    day_of_week: int = Field(
+        ..., description="Day of week (0=Monday, 6=Sunday)", example=3
+    )
+    merchant_category: str = Field(
+        ..., description="Type of merchant", example="online"
+    )
+
 
 class PredictionResponse(BaseModel):
     is_fraud: bool
     fraud_probability: float
     model_source: str = "MLflow Registry"
 
+
 @app.post("/predict", response_model=PredictionResponse)
 def predict(tx: Transaction):
     data = tx.dict()
-    
+
     try:
         data["merchant_encoded"] = encoder.transform([data["merchant_category"]])[0]
     except ValueError:
         data["merchant_encoded"] = 0
-    
+
     X = [[data["amount"], data["hour"], data["day_of_week"], data["merchant_encoded"]]]
-    
+
     pred = model.predict(X)[0]
     prob = model.predict_proba(X)[0][1]
-    
+
     return PredictionResponse(
         is_fraud=bool(pred),
         fraud_probability=round(float(prob), 4),
-        model_source="MLflow Registry"
+        model_source="MLflow Registry",
     )
+
 
 @app.get("/health")
 def health():
     return {"status": "healthy", "model_source": "MLflow Registry"}
+
 
 @app.get("/model-info")
 def model_info():
@@ -96,5 +108,5 @@ def model_info():
         "registry": "MLflow",
         "model_name": "fraud-detection-model",
         "alias": "champion (or latest)",
-        "tracking_uri": "http://localhost:5000"
+        "tracking_uri": "http://localhost:5001",
     }
