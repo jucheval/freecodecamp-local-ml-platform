@@ -23,6 +23,11 @@ wheels/
 .installed.cfg
 *.egg
 
+# Marimo
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+
 # Virtual environments
 venv/
 ENV/

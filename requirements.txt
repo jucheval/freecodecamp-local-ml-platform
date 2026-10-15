@@ -7,6 +7,9 @@ scipy>=1.10.0
 # Experiment tracking and model registry
 mlflow>=2.10.0
 
+# Marimo notebooks
+marimo>=0.25.0
+
 # Feature store
 feast>=0.36.0
 
