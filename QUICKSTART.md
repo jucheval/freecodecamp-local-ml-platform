@@ -95,9 +95,7 @@ In a first terminal, run:
 
 ```bash
 # Start MLflow server
-uv run mlflow server --host 0.0.0.0 --port 5555 \
-    --backend-store-uri sqlite:///mlflow.db \
-    --default-artifact-root ./mlruns
+uv run mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
 ```
 
 In a second terminal, run:
@@ -107,7 +105,7 @@ In a second terminal, run:
 uv run python src/train_mlflow.py
 ```
 
-Open <http://localhost:5555> to view experiments
+Open <http://localhost:5001> to view experiments
 
 <!-- ## Step 6: Run Drift Monitoring (Optional, 1 minute)
 
@@ -174,8 +172,8 @@ pip install -r requirements.txt
 **MLflow connection error:**
 
 ```bash
-# Make sure MLflow server is running on port 5000
-curl http://localhost:5000/health
+# Make sure MLflow server is running on port 5001
+curl http://localhost:5001/health
 ```
 
 ## Success Criteria

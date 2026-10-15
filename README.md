@@ -219,14 +219,14 @@ python src/test_bad_data.py
 mkdir -p mlruns
 mlflow server \
     --host 0.0.0.0 \
-    --port 5000 \
+    --port 5001 \
     --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root ./mlruns
 
 # Terminal 2: Run experiment sweep
 python src/train_mlflow.py
 
-# View experiments at http://localhost:5000
+# View experiments at http://localhost:5001
 ```
 
 **In MLflow UI:**
@@ -350,7 +350,7 @@ python src/generate_data.py
 python src/prepare_feast_features.py
 
 # 4. Start MLflow server (Terminal 1)
-mlflow server --host 0.0.0.0 --port 5000 \
+mlflow server --host 0.0.0.0 --port 5001 \
     --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root ./mlruns
 
@@ -358,7 +358,7 @@ mlflow server --host 0.0.0.0 --port 5000 \
 python src/train_mlflow.py
 
 # 6. Promote best model to Production in MLflow UI
-# Visit http://localhost:5000, go to Models tab, select best version, set stage to "Production"
+# Visit http://localhost:5001, go to Models tab, select best version, set stage to "Production"
 
 # 7. Start validated API (Terminal 2)
 uvicorn src.serve_validated:app --reload --port 8000
@@ -439,11 +439,11 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
     ports:
-      - "5000:5000"
+      - "5001:5001"
     command: >
       mlflow server
       --host 0.0.0.0
-      --port 5000
+      --port 5001
       --backend-store-uri sqlite:///mlflow/mlflow.db
       --default-artifact-root /mlflow/artifacts
     volumes:
@@ -456,7 +456,7 @@ services:
     depends_on:
       - mlflow
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
 
 volumes:
   mlflow_data:
@@ -474,7 +474,7 @@ Run with: `docker-compose up`
 Error: No model found with name 'fraud-detection-model' in stage 'Production'
 ```
 
-**Solution:** Promote a model to Production stage in MLflow UI (<http://localhost:5000>)
+**Solution:** Promote a model to Production stage in MLflow UI (<http://localhost:5001>)
 
 **Issue: Feast features not found**
 
